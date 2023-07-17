@@ -1,33 +1,62 @@
 ---
-- hosts: servalab-machines
+- hosts: sarvalabs-machines
   become: true
   tasks:
-    - name: Create user named sarvalabs
-      ansible.builtin.user:
+   - name: create user named sarvalabs
+     ansible.builtin.user:
       name: sarvalabs
       group: sudo
       append: yes
       state: present
 
-    - name: Download and install requir
-      apt:
-        name: "{{item}}"
+   - name: Download and install
+     apt:
+       name: "{{item}}"
+       update_cache: yes
+       state: present
+     loop:
+       - prometheus-node-exporter
+       - prometheus
+       - docker.io
+
+   - name: start and enable services
+     service:
+       name: "{{item}}"
+       state: started
+       enabled: yes
+     loop:
+      - prometheus-node-exporter
+      - prometheus
+      - docker.service
+
+   - name: install gpg
+     apt:
+       name: gnupg,software-properties-common
+       state: present
+       update_cache: yes
+
+   - name: add gpg hey
+     apt_key:
+       url: "https://packages.grafana.com/gpg.key"
+       validate_certs: no
+
+   - name: add repository
+     apt_repository:
+       repo: "deb https://packages.grafana.com/oss/deb stable main"
+       state: present
+       validate_certs: no
+
+   - name: install grafana
+     apt: 
+      name: grafana
+        state: latest
         update_cache: yes
-        state: present
-      loop: 
-        - prometheus-node-exporter
-        - prometheus
-        - grafana
-    
-    - name: Start and enable Services
-      service:
-        name: "{{item}}"
-        state: started
-        enabled: yes
-      loop:
-        - prometheus-node-exporter
-        - prometheus
-        - grafana 
+
+   - name: start service grafana-server
+     systemd:
+       name: grafana-server
+       state: started
+       enabled: yes
 
 
     
