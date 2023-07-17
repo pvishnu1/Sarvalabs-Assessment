@@ -1,0 +1,41 @@
+---
+- name: playbook to host an django application
+  hosts: sarvalabs-machines
+  become: yes
+  vars:
+    username: pvishnu1
+    password: Vis@123789
+    image_name: todo
+    dockerfile_path: /home/ubuntu/django-todo
+    image_tag: v1
+    exposed_ports:
+      - "8001:8001"
+
+  tasks:
+    - name: Git checkout
+      ansible.builtin.git:
+        repo: "https://github.com/pvishnu1/django-todo.git"
+        dest: /home/ubuntu/django-todo
+        version: develop
+
+    - name: Log in to Docker Hub
+      docker_login:
+        username: "{{ username }}"
+        password: "{{ password }}"
+
+    - name: Build Docker image
+      docker_image:
+        name: "{{ image_name }}"
+        state: present
+        build:
+          pull: no
+          path: "{{ dockerfile_path }}"
+        source: build
+      become: yes
+
+    - name: Run docker container
+      docker_container:
+        name: "{{ image_name }}"
+        image: "{{ image_name }}:{{ image_tag }}"
+        ports: "{{ exposed_ports }}"
+        state: started

@@ -1,0 +1,5 @@
+[sarvalabs-machines]
+54.167.208.140
+
+[sarvalabs-machines:vars]
+ansible_python_interpreter=/usr/bin/python3
